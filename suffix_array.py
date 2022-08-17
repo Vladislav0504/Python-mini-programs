@@ -1,0 +1,49 @@
+from itertools import zip_longest, islice
+# itertools.islice(iterable, [start], stop[, step]) - итератор, состоящий из среза
+# itertools.zip_longest(*iterables, fillvalue=None) - как zip, но берет самый длинный итератор, а более короткие дополняет fillvalue
+# (zip_longest('ABCD', 'xy', fillvalue='-') --> Ax By C- D-)
+
+def get_classes(st):
+    chars = set(st)
+    lst = list(chars)
+    lst.sort()
+    M = len(lst) - 1
+    index = {v: i for i, v in enumerate(lst)}
+    return [index[v] for v in st], M
+
+def suffix_array(st):
+    n = len(st)
+    k = 1
+    c, M = get_classes(st)
+    while M < n - 1:
+        c, M = get_classes(
+            [a * (n + 1) + b + 1 for (a, b) in zip_longest(c, islice(c, k, None), fillvalue=-1)])
+        k <<= 1 # бинарный сдвиг, увеличение k в 2 раза
+    return c
+
+def inverse_array(p):
+    n = len(p)
+    ans = [0] * n
+    for i in range(n):
+        ans[p[i]] = i
+    return ans
+
+def lcp(s, p, p1):
+    n = len(s)
+    s = s + '#' + s
+    k = 0
+    d = [0] * n
+    for i in range(n):
+        k = max(k - 1, 0)
+        pos = p1[i]
+        if pos + 1 < n:
+            j = p[pos + 1]
+            while s[i + k] == s[j + k]:
+                k += 1
+            d[pos] = k
+    return d[:n - 1]
+s = input()
+lst = suffix_array(s)
+lst2 = inverse_array(lst)
+print(*[el + 1 for el in lst2])
+print(*lcp(s, lst2, lst))
